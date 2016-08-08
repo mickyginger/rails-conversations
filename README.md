@@ -19,7 +19,7 @@ The conversation model and respective database table is quite unusual, so we're 
 `rails g migration CreateConversations`
 
 This will give you the following migration: 
-```
+```ruby
 class CreateConversations < ActiveRecord::Migration[5.0]
   def change
     create_table :conversations do |t|
@@ -29,7 +29,7 @@ end
 ```
 Update it as follows:
 
-```
+```ruby
 class CreateConversations < ActiveRecord::Migration[5.0]
   def change
     create_table :conversations do |t|
@@ -50,7 +50,7 @@ Since the sender_id *and* the receiver_id will both be user ids, we need to cons
 
 Then flesh out the model: 
 
-```
+```ruby
 class Conversation < ApplicationRecord
   belongs_to :sender, class_name: "User", foreign_key: "sender_id"
   belongs_to :receiver, class_name: "User", foreign_key: "receiver_id"
@@ -63,7 +63,7 @@ But wait, there's more...
 
 A conversation will have many messages, so we can add that relationship to the model now as well:
 
-```
+```ruby
 class Conversation < ApplicationRecord
   belongs_to :sender, class_name: "User", foreign_key: "sender_id"
   belongs_to :receiver, class_name: "User", foreign_key: "receiver_id"
@@ -75,7 +75,7 @@ We're also going to add a validation as well. We want to make sure that only one
 
 If Sarah starts a conversation with Bradley, Sarah is the `sender` and Bradley the `receiver`. If Bradley wants to send Sarah a message, he should use the same conversation that has already been set up between those two users, even though he is now the `sender`.
 
-```
+```ruby
 class Conversation < ApplicationRecord
   belongs_to :sender, class_name: "User", foreign_key: "sender_id"
   belongs_to :receiver, class_name: "User", foreign_key: "receiver_id"
@@ -91,7 +91,7 @@ The `scope` option limits the uniqueness check.
 
 Finally, we need to add a class method `between` which will allow us to find the conversation between to users, regardless of who is the `sender` and who is the `receiver`. To create a class method with ActiveRecord, we use the `scope` method, like so:
 
-```
+```ruby
 class Conversation < ApplicationRecord
   belongs_to :sender, class_name: "User", foreign_key: "sender_id"
   belongs_to :receiver, class_name: "User", foreign_key: "receiver_id"
@@ -115,7 +115,7 @@ This will be a lot simpler! We can generate the model directly like so:
 
 Before running the migration that is created, we need to set `read` to be `false` by default. Amend the migration like so:
 
-```
+```ruby
 class CreateMessages < ActiveRecord::Migration[5.0]
   def change
     create_table :messages do |t|
@@ -134,7 +134,7 @@ Then `rake db:migrate`
 
 We're just going to add a validation to the message model to ensure all of the fields are filled in:
 
-```
+```ruby
 class Message < ApplicationRecord
   belongs_to :conversation
   belongs_to :user
@@ -145,7 +145,7 @@ end
 
 While we're here, we can add some formatting to the timestamp, so we can display the time of the message in a more human readable way:
 
-```
+```ruby
 class Message < ApplicationRecord
   belongs_to :conversation
   belongs_to :user
@@ -167,7 +167,7 @@ The routing for this system is actually very straightforward. We want a `convers
 
 We can do that very simply like so:
 
-```
+```ruby
 # config/routes.rb
   devise_for :users
 
@@ -190,7 +190,7 @@ This will create the controller and an `index.html.erb` file in `app/views/conve
 
 Let's flesh out the controller:
 
-```
+```ruby
 class ConversationsController < ApplicationController
   before_action :authenticate_user!
   
@@ -207,7 +207,7 @@ Notice that I have added the `authenticate_user!` method as a `before_action`. T
 
 Let's now add the `create` method. First we will check if a conversation already exists between the two users. If it does we will redirect the user to that conversation's messages index page. If not, we will create the conversation and then redirect the user.
 
-```
+```ruby
 class ConversationsController < ApplicationController
   before_action :authenticate_user!
   
@@ -257,6 +257,10 @@ There's only one view we need to create here. Here's a skeleton view which you c
 ```
 
 ## Messages controller
+
+As before we can generate the controller like so:
+
+`rails g controller messages index`
 
 Here's the completed controller. Take a look, then I'll talk you through it:
 
