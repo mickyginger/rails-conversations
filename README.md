@@ -298,7 +298,7 @@ end
 
 We start by ensuring the user is logged in. Since we are always going to need the current conversation regardless of what we are doing, we can use the `before_action` hook to pull that from the database.
 
-In the `index` method, we can pull out all of the messges from the conversation. Since all the messages will be on the page, we can assume the user has read all the unread messages that were sent to him, so we update the `read` attribute of any messages sent by the other user to be `true`. After that, we craete a new message, ready for the user to add the content.
+In the `index` method, we can pull out all of the messges from the conversation. Since all the messages will be on the page, we can assume the user has read all the unread messages that were sent to her, so we update the `read` attribute of any messages sent by the other user to be `true`. After that, we craete a new message, ready for the user to add the content.
 
 The `create` method is standard, we save the message and redirect to the same page, so the user can see their new message has been added to the conversation.
 
