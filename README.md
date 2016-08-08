@@ -6,6 +6,10 @@
 
 ## Overview
 
+![inbox](https://raw.githubusercontent.com/mickyginger/rails-conversations/master/screen-shot-1.png)
+
+![messges](https://raw.githubusercontent.com/mickyginger/rails-conversations/master/screen-shot-2.png)
+
 The system requires 3 models: `User`, `Message` and `Conversation`. The conversation is simply a container for messages. It is essentially a relationship between two users. The system we are going to create will effectivly mimic a phone text message system, where the user clicks on the name of a contact and all of the messages between those two people will be displayed there.
 
 ## Setup
