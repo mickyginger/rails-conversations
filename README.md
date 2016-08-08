@@ -105,7 +105,7 @@ class Conversation < ApplicationRecord
 end
 ```
 
-Here we have created some custom `SQL`. `Conversation.between` will take two arguments, bother user ids, and try to find a conversation that has either one as sender OR receiver. We be using this later.
+Here we have created some custom SQL. `Conversation.between` will take two arguments, both user ids, and try to find a conversation that has either one as sender OR receiver. We be using this later.
 
 ## Message model
 
