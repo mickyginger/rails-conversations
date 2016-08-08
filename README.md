@@ -1,5 +1,7 @@
 # Creating an internal messaging system in Rails 5: a walkthrough
 
+> **Note:** This app was lifted almost line by line from [an excellent article by Dana Muller](https://medium.com/@danamulder/tutorial-create-a-simple-messaging-system-on-rails-d9b94b0fbca1#.bheztdsw0). I've made a few changes to her solution, but I highly recommend reading the article.
+
 > **Note:** This guide assumes you've already implemented a user authentication system. I'm using Devise here, but a custom BCrypt system would work equally well.
 
 ## Overview
@@ -417,7 +419,3 @@ Great, let's update the view
 If there are unread messages (ie, the `unread_message_count` is not 0), then we can display them on the screen.
 
 > **Note:** if you're using bootstrap (a list group with badges)[http://getbootstrap.com/components/#list-group-badges] might be useful here.
-
-## Dana Muller
-
-This app was taken almost line by line from [an excellent article by Dana Muller](https://medium.com/@danamulder/tutorial-create-a-simple-messaging-system-on-rails-d9b94b0fbca1#.bheztdsw0). I've made a few changes to her solution, but its well worth reading the article through.
