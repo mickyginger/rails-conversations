@@ -1,16 +1,18 @@
-<% @conversation.messages.each do |message| %>
-  <% if message.body %>
-    <div class="media">
-      <div class="media-left">
-        <%= image_tag message.user.image.thumb, class: "media-object user-img", alt: message.user.username %>
+<div id="messages">
+  <% @conversation.messages.each do |message| %>
+    <% if message.body %>
+      <div class="media">
+        <div class="media-left">
+          <%= image_tag message.user.image.thumb, class: "media-object user-img", alt: message.user.username %>
+        </div>
+        <div class="media-body">
+          <h5 class="media-heading"><%= message.user.username %> <small class="text-muted"><%= message.time %></small></h5>
+          <p><%= message.body %></p>
+        </div>
       </div>
-      <div class="media-body">
-        <h5 class="media-heading"><%= message.user.username %> <small class="text-muted"><%= message.time %></small></h5>
-        <p><%= message.body %></p>
-      </div>
-    </div>
+    <% end %>
   <% end %>
-<% end %>
+</div>
 
 <%= form_for [@conversation, @message] do |f| %>
   <div class="form-group">

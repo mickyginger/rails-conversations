@@ -2,7 +2,7 @@
   <div class="col-md-8">
     <ul class="list-group">
       <% @conversations.each do |conversation| %>
-        <li class="list-group-item">
+        <li class="list-group-item" data-conversation-id="<%= conversation.id %>">
           <%= link_to conversation.recipient(current_user).username, conversation_messages_path(conversation) %>
           <% if !conversation.unread_message_count(current_user).zero? %>
             <span class="badge"><%= conversation.unread_message_count(current_user) %></span>
