@@ -353,9 +353,9 @@ class Conversation < ApplicationRecord
 end
 ```
 
-We've created a new method recipient, which will return the other user (ie not the current\_user) from the conversation. Unfortunately we have to pass the current\_user into the method since the `current_user` is not available in the model by design.
+We've created a new method `recipient`, which will return the other user (ie not the `current_user`) from the conversation. Unfortunately we have to pass `current_user` into the method since `current_user` is not available in the model by design.
 
-> **Note:** Some more info about that from (StackOverflow)[http://stackoverflow.com/questions/5884132/why-is-devises-current-user-not-available-at-the-model-layer]
+> **Note:** Some more info about that from (StackOverflow)[http://stackoverflow.com/questions/2513383/access-current-user-in-model]
 
 Now we can use it in our view
 
