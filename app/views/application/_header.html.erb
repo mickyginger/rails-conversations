@@ -1,0 +1,8 @@
+<nav class="navbar navbar-default">
+  <div class="container">
+    <a class="navbar-brand" href="/">Inbox</a>
+    <% if user_signed_in? %>
+      <%= image_tag current_user.image.thumb, class: "pull-right user-img", alt: current_user.username %>
+    <% end %>
+  </div>
+</nav>

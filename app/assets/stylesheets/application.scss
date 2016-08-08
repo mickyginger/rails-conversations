@@ -1,0 +1,10 @@
+@import "bootstrap-sprockets";
+@import "bootstrap";
+
+img.user-img {
+  border-radius: 4px;
+}
+
+.navbar img.user-img {
+  margin: 7px 0;
+}
