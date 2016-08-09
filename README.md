@@ -427,3 +427,151 @@ Great, let's update the view
 If there are unread messages (ie, the `unread_message_count` is not 0), then we can display them on the screen.
 
 > **Note:** if you're using bootstrap (a list group with badges)[http://getbootstrap.com/components/#list-group-badges] might be useful here.
+
+## Real-time Rails
+
+> **Note:** this section was heavily influenced by [another great article, this time by Sophie DeBenedetto](https://blog.heroku.com/real_time_rails_implementing_websockets_in_rails_5_with_action_cable) for Heroku
+
+Adding websocket functionality is simple with rails 5, thanks to ActionCable but does require a bit of setup
+
+First we need to mount the websocket server in the routes file:
+
+```ruby
+Rails.application.routes.draw do
+  mount ActionCable.server => '/cable'
+
+  devise_for :users
+  root 'conversations#index'
+
+  resources :conversations, only: [:index, :create] do
+    resources :messages, only: [:index, :create]
+  end
+end
+```
+
+Next we need to create a client-side websocket request handler. First we need to create a js file in the `channels` folder
+
+```bash
+touch app/assets/javascripts/channels/messages.js
+```
+
+Then actually create the request handler:
+
+```javascript
+// app/assets/javascripts/channels/messages.js
+
+//= require cable
+//= require_self
+//= require_tree .
+
+this.App = {};
+
+App.cable = ActionCable.createConsumer(); 
+```
+
+This file is so far just creating a connection with the webserver. We'll update it sortly to actually do something when a message is sent.
+
+> **Note:** The websocket URI is `/cable` by default. If we want to set it to something else we can do so in a config file, like so: `config.action_cable.url = "ws://localhost:3000/something-else"`
+
+We also need to include an `<%= action_cable_meta_tag %>` in `app/views/layouts/application.html.erb`.
+
+### The channel
+
+OK, next we need to create a channel. This will handle all the requests for a specific resource. Rails has a generator for this:
+
+```bash
+rails g channel messages
+```
+
+This will create a new file `app/channels/messages_channel.rb`. We simply need to update the `subscribed` method therein:
+
+```ruby
+class MessagesChannel < ApplicationCable::Channel
+  def subscribed
+    stream_from "messages"
+  end
+
+  def unsubscribed
+    # Any cleanup needed when channel is unsubscribed
+  end
+end
+```
+
+### Broadcasting an event
+
+When a user adds a message to a conversation, we are going to broadcast the conversation id. If any users are currently displaying that conversation, we will reload the page.
+
+So firstly we need to update our messages controller to broadcast when a message is created:
+
+```ruby
+# app/controllers/messages_controller.rb
+class MessagesController < ApplicationController
+
+  ...
+
+  def create
+    @message = @conversation.messages.new(message_params)
+    @message.user = current_user
+
+    if @message.save
+      ActionCable.server.broadcast "messages", { conversation_id: @conversation.id }
+      redirect_to conversation_messages_path(@conversation)
+    end
+  end
+
+  ...
+  
+end
+
+```
+
+So we're simply broadcasting the `conversation_id` of the message that was created along the `messages` channel.
+
+### "Reloading" the page
+
+Finally we need to receive that broadcast, and if the user is displaying that message, reaload the page.
+
+We're going to do that in the javascript file we created earlier:
+
+```javascript
+// app/assets/javascripts/channels/messages.js
+
+//= require cable
+//= require_self
+//= require_tree .
+
+this.App = {};
+
+App.cable = ActionCable.createConsumer();
+
+App.messages = App.cable.subscriptions.create('MessagesChannel', {
+  received: function(data){
+    if(!!location.pathname.match("conversations/" + data.conversation_id) || !!$('[data-conversation-id='+ data.conversation_id + ']').length) {
+      Turbolinks.visit(location);
+    }
+  }
+});
+```
+The data we sent down the channel is picked up by the `received` method of our subscription. We can access it from the `data` object passed into the method. So `data.conversation_id` should be the id of the conversation that was just added to.
+
+We first check to see if we are on the messages page for that conversation, buy checking the url (eg: `/conversations/1`). If not, we check if the conversation is visible on the conversations index page by checking for a data attribute to see if we can find the updated conversation id there. Either way, if the user can see the conversation on their screen, we update the view using the `Turbolinks.visit` method.
+
+> **Note:** for more information about turbolinks [consult the documentation](https://github.com/turbolinks/turbolinks)
+
+### Adding the data-attribute to the conversations index page
+
+Finally we need to update the conversations index page to include those all important data-attributes on the conversations that we're listing there:
+
+```erb
+<h1>Inbox</h1>
+
+<ul>
+  <% @conversations.each do |conversation| %>
+    <li data-conversation-id="<%= conversation.id %>">
+      <%= link_to conversation.recipient(current_user).username, conversation_messages_path(conversation) %>
+    </li>
+  <% end %>
+</ul>
+```
+
+Great! Now regardless of which page the user is on, if a message is added to a conversation, the user will know about it immediately.

@@ -9,7 +9,7 @@ App.cable = ActionCable.createConsumer();
 App.messages = App.cable.subscriptions.create('MessagesChannel', {  
   received: function(data) {
     
-    if(!!location.pathname.match("conversations/" + data.conversation_id) || !!$('li[data-conversation-id='+ data.conversation_id + ']').length) {
+    if(!!location.pathname.match("conversations/" + data.conversation_id) || !!$('[data-conversation-id='+ data.conversation_id + ']').length) {
       Turbolinks.visit(location);
     }
   }
