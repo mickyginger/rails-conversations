@@ -5,4 +5,5 @@ test:
   adapter: async
 
 production:
-  adapter: async
+  adapter: redis
+  url: redis://redistogo:56b97afc181a5f2ff72b2a3a78d8d37d@viperfish.redistogo.com:11321/
