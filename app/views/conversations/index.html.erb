@@ -12,9 +12,14 @@
     </ul>
   </div>
   <div class="col-md-4">
-    <ul class="list-group">
+    <div class="form-group">
+      <input id="search" placeholder="Search" class="form-control">
+    </div>
+    <ul id="users" class="list-group">
       <% @users.each do |user| %>
-        <li class="list-group-item"><%= link_to user.username, conversations_path(sender_id: current_user.id, receiver_id: user.id), method: :post %></li>
+        <li class="list-group-item" data-searchstring="<%= user.username %> <%= user.name %>">
+          <%= link_to user.username, conversations_path(sender_id: current_user.id, receiver_id: user.id), method: :post %>
+        </li>
       <% end %>
     </ul>
   </div>
