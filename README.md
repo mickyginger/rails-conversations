@@ -2,7 +2,7 @@
 
 > **Note:** This app was lifted almost line by line from [an excellent article by Dana Muller](https://medium.com/@danamulder/tutorial-create-a-simple-messaging-system-on-rails-d9b94b0fbca1#.bheztdsw0). I've made a few changes to her solution, but I highly recommend reading the article.
 
-> **Note:** This guide assumes you've already implemented a user authentication system. I'm using Devise here, but a custom BCrypt system would work equally well.
+> **Note:** This guide assumes you've already implemented a user authentication system with BCrypt.
 
 ## Overview
 
@@ -10,7 +10,7 @@
 
 ![messges](https://raw.githubusercontent.com/mickyginger/rails-conversations/master/screen-shot-2.png)
 
-The system requires 3 models: `User`, `Message` and `Conversation`. The conversation is simply a container for messages. It is essentially a relationship between two users. The system we are going to create will effectivly mimic a phone text message system, where the user clicks on the name of a contact and all of the messages between those two people will be displayed there.
+The system requires 3 models: `User`, `Message` and `Conversation`. The conversation is simply a container for messages. It is essentially a relationship between two users. The system we are going to create will effectively mimic a phone text message system, where the user clicks on the name of a contact and all of the messages between those two people will be displayed there.
 
 ## Setup
 
@@ -22,7 +22,7 @@ The conversation model and respective database table is quite unusual, so we're 
 
 `rails g migration CreateConversations`
 
-This will give you the following migration: 
+This will give you the following migration:
 ```ruby
 class CreateConversations < ActiveRecord::Migration[5.0]
   def change
@@ -39,7 +39,7 @@ class CreateConversations < ActiveRecord::Migration[5.0]
     create_table :conversations do |t|
       t.integer :sender_id
       t.integer :receiver_id
-      
+
       t.timestamps
     end
   end
@@ -52,7 +52,7 @@ Since the sender_id *and* the receiver_id will both be user ids, we need to cons
 
 `touch app/models/conversation.rb`
 
-Then flesh out the model: 
+Then flesh out the model:
 
 ```ruby
 class Conversation < ApplicationRecord
@@ -84,7 +84,7 @@ class Conversation < ApplicationRecord
   belongs_to :sender, class_name: "User", foreign_key: "sender_id"
   belongs_to :receiver, class_name: "User", foreign_key: "receiver_id"
   has_many :messages, dependent: :destroy
-  
+
   validates_uniqueness_of :sender_id, scope: :receiver_id
 end
 ```
@@ -173,18 +173,16 @@ We can do that very simply like so:
 
 ```ruby
 # config/routes.rb
-  devise_for :users
-
-  resources :conversations, only: [:index, :create] do
-    resources :messages, only: [:index, :create]
-  end
+resources :conversations, only: [:index, :create] do
+  resources :messages, only: [:index, :create]
+end
 ```
 
 You can see how that has affected your app's routes by typing `rails routes` in the terminal.
 
 ## Conversations controller
 
-The conversations controller will basically handle showing all convesations, and creating new conversations when needed. It will only need `index` and `create` methods.
+The conversations controller will basically handle showing all conversations, and creating new conversations when needed. It will only need `index` and `create` methods.
 
 Lets make this now:
 
@@ -196,8 +194,8 @@ Let's flesh out the controller:
 
 ```ruby
 class ConversationsController < ApplicationController
-  before_action :authenticate_user!
-  
+  before_action :authenticate
+
   def index
     @conversations = Conversation.where("sender_id = ? OR receiver_id = ?", current_user.id, current_user.id)
     @users = User.where.not(id: current_user.id)
@@ -207,14 +205,14 @@ end
 
 For the index, we will display a list of all the conversations that the current user has on the go, and a list of the users that are signed up to the app.
 
-Notice that I have added the `authenticate_user!` method as a `before_action`. The user **must** be logged in to view their messages!
+Notice that I have added the `authenticate` method as a `before_action`. The user **must** be logged in to view their messages!
 
 Let's now add the `create` method. First we will check if a conversation already exists between the two users. If it does we will redirect the user to that conversation's messages index page. If not, we will create the conversation and then redirect the user.
 
 ```ruby
 class ConversationsController < ApplicationController
-  before_action :authenticate_user!
-  
+  before_action :authenticate
+
   def index
     @users = User.where.not(id: current_user.id)
     @conversations = Conversation.where("sender_id = ? OR receiver_id = ?", current_user.id, current_user.id)
@@ -270,8 +268,8 @@ Here's the completed controller. Take a look, then I'll talk you through it:
 
 ```ruby
 class MessagesController < ApplicationController
-  before_action :authenticate_user!
-  
+  before_action :authenticate
+
   before_action do
     @conversation = Conversation.find(params[:conversation_id])
   end
@@ -286,7 +284,7 @@ class MessagesController < ApplicationController
 
   def create
     @message = @conversation.messages.new(message_params)
-  @message.user = current_user
+    @message.user = current_user
 
     if @message.save
       redirect_to conversation_messages_path(@conversation)
@@ -302,7 +300,7 @@ end
 
 We start by ensuring the user is logged in. Since we are always going to need the current conversation regardless of what we are doing, we can use the `before_action` hook to pull that from the database.
 
-In the `index` method, we can pull out all of the messges from the conversation. Since all the messages will be on the page, we can assume the user has read all the unread messages that were sent to her, so we update the `read` attribute of any messages sent by the other user to be `true`. After that, we create a new message, ready for the user to add the content.
+In the `index` method, we can pull out all of the messages from the conversation. Since all the messages will be on the page, we can assume the user has read all the unread messages that were sent to her, so we update the `read` attribute of any messages sent by the other user to be `true`. After that, we create a new message, ready for the user to add the content.
 
 The `create` method is standard, we save the message and redirect to the same page, so the user can see their new message has been added to the conversation.
 
@@ -331,11 +329,11 @@ Again, a skeleton view for your consideration:
 <% end %>
 ```
 
-The only thing here that's unusual is the `form_for` tag. We're passing two models. This will mean that the form points to the correct url, eg: `/conversaions/1/messges/`
+The only thing here that's unusual is the `form_for` tag. We're passing two models. This will mean that the form points to the correct url, eg: `/conversations/1/messages/`
 
 ## Cleaning up our views
 
-The ideal goal with the MVC design pattern is to have the model take care of all the data, and as much logic as possible, leaving our views and controllers as clean as possible. We can remove the `reciever` variable from the conversations index page and move the logic into the model:
+The ideal goal with the MVC design pattern is to have the model take care of all the data, and as much logic as possible, leaving our views and controllers as clean as possible. We can remove the `receiver` variable from the conversations index page and move the logic into the model:
 
 ```ruby
 # app/models/conversation.rb
@@ -357,7 +355,7 @@ class Conversation < ApplicationRecord
 end
 ```
 
-We've created a new method `recipient`, which will return the other user (ie not the `current_user`) from the conversation. Unfortunately we have to pass `current_user` into the method since `current_user` is not available in the model by design.
+We've created a new method `recipient`, which will return the other user (ie. not the `current_user`) from the conversation. Unfortunately we have to pass `current_user` into the method since `current_user` is not available in the model by design.
 
 > **Note:** Some more info about that from (StackOverflow)[http://stackoverflow.com/questions/2513383/access-current-user-in-model]
 
@@ -424,154 +422,6 @@ Great, let's update the view
 </ul>
 ```
 
-If there are unread messages (ie, the `unread_message_count` is not 0), then we can display them on the screen.
+If there are unread messages (ie. the `unread_message_count` is not 0), then we can display them on the screen.
 
 > **Note:** if you're using bootstrap (a list group with badges)[http://getbootstrap.com/components/#list-group-badges] might be useful here.
-
-## Real-time Rails
-
-> **Note:** this section was heavily influenced by [another great article, this time by Sophie DeBenedetto](https://blog.heroku.com/real_time_rails_implementing_websockets_in_rails_5_with_action_cable) for Heroku
-
-Adding websocket functionality is simple with rails 5, thanks to ActionCable but does require a bit of setup
-
-First we need to mount the websocket server in the routes file:
-
-```ruby
-Rails.application.routes.draw do
-  mount ActionCable.server => '/cable'
-
-  devise_for :users
-  root 'conversations#index'
-
-  resources :conversations, only: [:index, :create] do
-    resources :messages, only: [:index, :create]
-  end
-end
-```
-
-Next we need to create a client-side websocket request handler. First we need to create a js file in the `channels` folder
-
-```bash
-touch app/assets/javascripts/channels/messages.js
-```
-
-Then actually create the request handler:
-
-```javascript
-// app/assets/javascripts/channels/messages.js
-
-//= require cable
-//= require_self
-//= require_tree .
-
-this.App = {};
-
-App.cable = ActionCable.createConsumer(); 
-```
-
-This file is so far just creating a connection with the webserver. We'll update it sortly to actually do something when a message is sent.
-
-> **Note:** The websocket URI is `/cable` by default. If we want to set it to something else we can do so in a config file, like so: `config.action_cable.url = "ws://localhost:3000/something-else"`
-
-We also need to include an `<%= action_cable_meta_tag %>` in `app/views/layouts/application.html.erb`.
-
-### The channel
-
-OK, next we need to create a channel. This will handle all the requests for a specific resource. Rails has a generator for this:
-
-```bash
-rails g channel messages
-```
-
-This will create a new file `app/channels/messages_channel.rb`. We simply need to update the `subscribed` method therein:
-
-```ruby
-class MessagesChannel < ApplicationCable::Channel
-  def subscribed
-    stream_from "messages"
-  end
-
-  def unsubscribed
-    # Any cleanup needed when channel is unsubscribed
-  end
-end
-```
-
-### Broadcasting an event
-
-When a user adds a message to a conversation, we are going to broadcast the conversation id. If any users are currently displaying that conversation, we will reload the page.
-
-So firstly we need to update our messages controller to broadcast when a message is created:
-
-```ruby
-# app/controllers/messages_controller.rb
-class MessagesController < ApplicationController
-
-  ...
-
-  def create
-    @message = @conversation.messages.new(message_params)
-    @message.user = current_user
-
-    if @message.save
-      ActionCable.server.broadcast "messages", { conversation_id: @conversation.id }
-      redirect_to conversation_messages_path(@conversation)
-    end
-  end
-
-  ...
-  
-end
-
-```
-
-So we're simply broadcasting the `conversation_id` of the message that was created along the `messages` channel.
-
-### "Reloading" the page
-
-Finally we need to receive that broadcast, and if the user is displaying that message, reaload the page.
-
-We're going to do that in the javascript file we created earlier:
-
-```javascript
-// app/assets/javascripts/channels/messages.js
-
-//= require cable
-//= require_self
-//= require_tree .
-
-this.App = {};
-
-App.cable = ActionCable.createConsumer();
-
-App.messages = App.cable.subscriptions.create('MessagesChannel', {
-  received: function(data){
-    if(!!location.pathname.match("conversations/" + data.conversation_id) || !!$('[data-conversation-id='+ data.conversation_id + ']').length) {
-      Turbolinks.visit(location);
-    }
-  }
-});
-```
-The data we sent down the channel is picked up by the `received` method of our subscription. We can access it from the `data` object passed into the method. So `data.conversation_id` should be the id of the conversation that was just added to.
-
-We first check to see if we are on the messages page for that conversation, buy checking the url (eg: `/conversations/1`). If not, we check if the conversation is visible on the conversations index page by checking for a data attribute to see if we can find the updated conversation id there. Either way, if the user can see the conversation on their screen, we update the view using the `Turbolinks.visit` method.
-
-> **Note:** for more information about turbolinks [consult the documentation](https://github.com/turbolinks/turbolinks)
-
-### Adding the data-attribute to the conversations index page
-
-Finally we need to update the conversations index page to include those all important data-attributes on the conversations that we're listing there:
-
-```erb
-<h1>Inbox</h1>
-
-<ul>
-  <% @conversations.each do |conversation| %>
-    <li data-conversation-id="<%= conversation.id %>">
-      <%= link_to conversation.recipient(current_user).username, conversation_messages_path(conversation) %>
-    </li>
-  <% end %>
-</ul>
-```
-
-Great! Now regardless of which page the user is on, if a message is added to a conversation, the user will know about it immediately.
