@@ -357,7 +357,7 @@ end
 
 We've created a new method `recipient`, which will return the other user (ie. not the `current_user`) from the conversation. Unfortunately we have to pass `current_user` into the method since `current_user` is not available in the model by design.
 
-> **Note:** Some more info about that from (StackOverflow)[http://stackoverflow.com/questions/2513383/access-current-user-in-model]
+> **Note:** Some more info about that from [http://stackoverflow.com/questions/2513383/access-current-user-in-model](StackOverflow)
 
 Now we can use it in our view
 
@@ -424,4 +424,4 @@ Great, let's update the view
 
 If there are unread messages (ie. the `unread_message_count` is not 0), then we can display them on the screen.
 
-> **Note:** if you're using bootstrap (a list group with badges)[http://getbootstrap.com/components/#list-group-badges] might be useful here.
+> **Note:** if you're using bootstrap [http://getbootstrap.com/components/#list-group-badges](a list group with badges) might be useful here.
